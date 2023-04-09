@@ -35,6 +35,7 @@ class Environment:
         self.agents = [Agent(random.randint(0, width), random.randint(0, height), self) for _ in range(num_agents)] # 10 agents to start
         self.agent_counts = [len(self.agents)]
         self.avg_fitness = []
+        self.agents_history = [self.agents]
 
     def step(self):
         for agent in self.agents:
@@ -56,15 +57,60 @@ class Environment:
         # Replace old agents with new ones
         self.agents = new_agents
 
+        self.agents_history.append(self.agents)
+
         # Update average fitness as metric
         self.avg_fitness.append(total_fitness / len(self.agents)) if len(self.agents) else self.avg_fitness.append(0)
 
         # Add current number of agents to list
         self.agent_counts.append(len(self.agents))
+    
+    def plot(self):
+        import matplotlib.pyplot as plt
+        import matplotlib.animation as animation
+        import os
+
+        self.mypath = os.path.dirname(os.path.abspath(__file__)) + '/'
+        # set parameters
+        frames = 10
+        # create data
+        print(self.agents_history[0])
+        x = [agent.x for agent in self.agents_history[0]]
+        y = [agent.y for agent in self.agents_history[0]]
+
+        # set how the graph will change each frame
+        # sizes = itertools.cycle([10, 50, 150])
+        # colors = np.random.rand(frames, points)
+        # colormaps = itertools.cycle(['Purples', 'Blues', 'Greens', 'Oranges', 'Reds'])
+        # markers = itertools.cycle(['o', 'v', '^', 's', 'p'])
+
+        # init the figure
+        fig, ax = plt.subplots(figsize=(5,5))
+
+        def update(i):
+            # clear the axis each frame
+            ax.clear()
+            # replot things
+            ax.scatter(x, y,
+                    s=1,
+                    c='k',
+                    # cmap=next(colormaps),
+                    marker='.')
+
+            # reformat things
+            ax.set_xlabel('X')
+            ax.set_ylabel('Y')
+            # ax.set_xlim(min(x), max(x))
+            # ax.set_ylim(min(y), max(y))
+            ax.set_xlim(0, 100)
+            ax.set_ylim(0, 100)
+
+        ani = animation.FuncAnimation(fig, update, frames=frames, interval=1)
+        ani.save(self.mypath + 'scatter.gif', writer='pillow')
 
 def simulate(iterations, num_agents=10) :
     env = Environment(100, 100, num_agents)
     for i in range(iterations) :
         env.step()
         if i == iterations - 1 :
-            return(env.agent_counts, env.avg_fitness)
+            return(env.agent_counts, env.avg_fitness, env.agents)
